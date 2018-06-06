@@ -4,7 +4,7 @@
 This is a fork of original mav_trajectory_generation repo with added path planning algorithm.
 Given initial and final points it calculates a jerk free trajectory.
 
-##Installation Instructions
+## Installation Instructions
 
 Follow installation instructions given below in the original repo.
 **lookout for changes done in installation instructions for using this fork instead of original.**
@@ -45,7 +45,7 @@ git clone https://github.com/ethz-asl/mav_comm.git
 
 
 
-##Added node old_path_planning
+## Added node old_path_planning
 
 **Subscribers**
 1. /landing_sites/poses (takes goal point) *optional. comment the subscriber to give manual waypoints as global variables*
