@@ -1,3 +1,62 @@
+
+
+# Changelog
+This is a fork of original mav_trajectory_generation repo with added path planning algorithm.
+Given initial and final points it calculates a jerk free trajectory.
+
+##Installation Instructions
+
+Follow installation instructions given below in the original repo.
+**lookout for changes done in installation instructions for using this fork instead of original.**
+
+In Addition to that do following before performing [catkin build]:
+
+1. Install OMPL
+```
+sudo apt-get update
+sudo apt-get install ros-`rosversion -d`-ompl
+```
+
+2. Install FCL
+```
+cd ~/git
+git clone https://github.com/flexible-collision-library/fcl
+cd fcl; git checkout 0.5.0
+mkdir build; cd build
+cmake ..
+make -j `nproc`
+sudo make install
+```
+
+3. install octomath library
+```
+sudo apt-get install liboctomath-dev
+```
+installs version 1.6, might create symlink errors while [catkin build] because default version required is 1.8 by Ros-kinetic.
+
+4. Install the mav_masgs dependency :
+
+```
+cd ~/catkin_ws/src
+git clone https://github.com/ethz-asl/mav_comm.git
+``` 
+
+
+
+
+
+##Added node old_path_planning
+
+**Subscribers**
+1. /landing_sites/poses (takes goal point) *optional. comment the subscriber to give manual waypoints as global variables*
+2. /octomap_binary (takes binary octomap)
+
+**Publishers**
+1. /my_marker_array1 (output trajectory)
+
+
+
+
 # mav_trajectory_generation
 This repository contains tools for polynomial trajectory generation and optimization based on methods described in [1].
 These techniques are especially suitable for rotary-wing micro aerial vehicles (MAVs).
@@ -59,7 +118,7 @@ catkin config --merge-devel
 ```
 cd src
 wstool init
-wstool set --git mav_trajectory_generation git@github.com:ethz-asl/mav_trajectory_generation.git -y
+wstool set --git mav_trajectory_generation git@github.com:himanshu-erol/mav_trajectory_generation.git -y
 wstool update
 wstool merge mav_trajectory_generation/install/mav_trajectory_generation.rosinstall
 wstool update -j8
