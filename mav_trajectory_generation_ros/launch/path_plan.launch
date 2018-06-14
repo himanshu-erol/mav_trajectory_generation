@@ -1,0 +1,25 @@
+<launch>
+    
+
+    <arg name="rviz_config_file" default="$(find mav_trajectory_generation_ros)/rviz/path_planning_with_markers.rviz" />
+
+    <!--node pkg="mav_trajectory_generation_ros" name="load_landing_sites" type="load_landing_sites.py" output="screen"/--> 
+    
+
+    <node pkg="mav_trajectory_generation_ros" name="old_path_planning" type="old_path_planning" output="screen"> 
+    </node>
+
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server"
+          args="/home/valada/lab_map.bt" />
+
+    <!-- to fix the ocotomap coloring (points at higher heights should be red) -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_map_transformer"
+          args="0 0 0 0.707 0.707 0 0 map world 100" />
+
+
+    
+
+    <node pkg="rviz" type="rviz" output="screen" name="rviz"
+          args="-d $(arg rviz_config_file)" />
+
+</launch>

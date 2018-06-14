@@ -53,13 +53,17 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   roscpp
   std_msgs
+  rospy
+  visualization_msgs
+  interactive_markers
+  tf
 )
 
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES path_planning
-  CATKIN_DEPENDS octomap_msgs octomap_ros pcl_conversions pcl_ros roscpp std_msgs
+  CATKIN_DEPENDS octomap_msgs octomap_ros pcl_conversions pcl_ros roscpp std_msgs rospy visualization_msgs interactive_markers tf 
 #  DEPENDS octomap PCL
 )
 
@@ -87,6 +91,8 @@ target_link_libraries(old_path_planning ${PROJECT_NAME}
    ${OMPL_LIBRARIES}
    fcl
 )
+
+
 
 
 

@@ -30,4 +30,9 @@
   <depend>pcl_ros</depend>
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
+  <depend>rospy</depend>
+  <depend>interactive_markers</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf</depend>
+  
 </package>
