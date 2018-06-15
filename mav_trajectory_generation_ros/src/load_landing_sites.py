@@ -133,12 +133,12 @@ if __name__=="__main__":
 
     server = InteractiveMarkerServer("load_landing_sites")
     #load landing_sites numpy array and publish interative markers
-    poses=np.load('test_py1.npy')
+    poses=np.load('airsim_test_py.npy')
    
     counter=0
     
     for pose in poses:
-        if counter%100==0:
+        if counter%1000==0:
             position = Point(pose.position.x, pose.position.y, pose.position.z)
             make6DofMarker( False, InteractiveMarkerControl.ROTATE_3D, position, counter, False)
         counter+=1

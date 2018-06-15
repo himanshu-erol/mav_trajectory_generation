@@ -9,8 +9,13 @@
     <node pkg="mav_trajectory_generation_ros" name="old_path_planning" type="old_path_planning" output="screen"> 
     </node>
 
+    <!--node pkg="octomap_server" type="octomap_server_node" name="octomap_server"
+          args="/home/valada/lab_map.bt" /-->
+
+    <!-- Airsim octomap-->
     <node pkg="octomap_server" type="octomap_server_node" name="octomap_server"
-          args="/home/valada/lab_map.bt" />
+          args="/home/valada/airsim_map_small.bt" />
+
 
     <!-- to fix the ocotomap coloring (points at higher heights should be red) -->
     <node pkg="tf" type="static_transform_publisher" name="world_to_map_transformer"

@@ -298,7 +298,7 @@ void waypointsCallback1( trajectory_msgs::MultiDOFJointTrajectory msg)
 
              
 
-              while(1)
+             // while(1)
             {   
 
             visualization_msgs::MarkerArray markers;
@@ -337,12 +337,12 @@ void plan(void)
 	ob::RealVectorBounds bounds(3);
     // bounds.setLow(-1);
     // bounds.setHigh(1);
-	bounds.setLow(0,-5);
-	bounds.setHigh(0,5);
-	bounds.setLow(1,-5);
-	bounds.setHigh(1,5);
-	bounds.setLow(2,-2);
-	bounds.setHigh(2,4);
+	bounds.setLow(0,-40);//-5
+	bounds.setHigh(0,40);//+5
+	bounds.setLow(1,-40);//-5
+	bounds.setHigh(1,40);//+5
+	bounds.setLow(2,-8);//-2
+	bounds.setHigh(2,2);//4
 
 	space->as<ob::SE3StateSpace>()->setBounds(bounds);
 
@@ -360,7 +360,7 @@ void plan(void)
 
     // create a random goal state
 	ob::ScopedState<ob::SE3StateSpace> goal(space);
-	 goal->setXYZ(goal_x,goal_y,goal_z+0.2); //treshold for landing height
+	 goal->setXYZ(goal_x,goal_y,goal_z+0.5); //treshold for landing height 0.2
      //goal->setXYZ(2,2,-3);
      //goal->setXYZ(-3.76742, 2.98793, -0.788997);
 	 goal->as<ob::SO3StateSpace::StateType>(1)->setIdentity();
@@ -554,7 +554,8 @@ int main(int argc, char **argv)
 
     //Load Octomap......
     octomap::OcTree temp_tree(0.1);
-    const std::string filename = "/home/valada/mapfile.bt";
+    //const std::string filename = "/home/valada/lab_map.bt";
+    const std::string filename = "/home/valada/airsim_map_small.bt";
 	temp_tree.readBinary(filename);
 	fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(&temp_tree));
 	fcl::CollisionObject temp((std::shared_ptr<fcl::CollisionGeometry>(tree)));
