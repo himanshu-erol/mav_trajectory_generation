@@ -5,6 +5,8 @@
 #include <octomap_ros/conversions.h>
 #include <octomap/octomap.h>
 #include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include "visualization_msgs/Marker.h"
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 #include <nav_msgs/Odometry.h>
@@ -50,6 +52,10 @@ float goal_x = 0.0;   //setting some default values
 float goal_y = 0.0;
 float goal_z = 0.0;
 
+float cur_x = 0.0;   //setting some default values
+float cur_y = 0.0;
+float cur_z = 0.0;
+
 bool flag_sub_octomap=0;
 int flag_sub_goal=0;
 
@@ -58,7 +64,7 @@ int flag_sub_goal=0;
 ros::Publisher vis_pub;
 ros::Publisher spline_pub;
 
-std::shared_ptr<fcl::CollisionGeometry> Quadcopter(new fcl::Box(0.3, 0.3, 0.1));
+std::shared_ptr<fcl::CollisionGeometry> Quadcopter(new fcl::Box(0.3, 0.3, 0.1));//0.3,0.3.0.1
 fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(new octomap::OcTree(0.1)));
 fcl::CollisionObject treeObj((std::shared_ptr<fcl::CollisionGeometry>(tree)));
 fcl::CollisionObject aircraftObject(Quadcopter);
@@ -205,25 +211,7 @@ void waypointsCallback1( trajectory_msgs::MultiDOFJointTrajectory msg)
             const double magic_fabian_constant = 6.5; // A tuning parameter.
             segment_times = estimateSegmentTimes(vertices, v_max, a_max, magic_fabian_constant);
 
-            // #for linear optimization
-
-            //########## creat an optimizer object and solve
-
-            //const int N = 10;
-            //mav_trajectory_generation::PolynomialOptimization<N> opt(dimension);
-            //opt.setupFromVertices(vertices, segment_times, derivative_to_optimize);
-            //opt.solveLinear();
-
-            //######### obtain the polynomial segment_times
-
-            //mav_trajectory_generation::Segment::Vector segments;
-            //opt.getSegments(&segments);
-
             
-
-            //#for non linear Polynomial Optimization
-
-            //#######set the parameters for nonlinear Optimization
 
             mav_trajectory_generation::NonlinearOptimizationParameters parameters;
             parameters.max_iterations = 1000;
@@ -235,7 +223,7 @@ void waypointsCallback1( trajectory_msgs::MultiDOFJointTrajectory msg)
 
             //#######create optimizer object and solve. (true/false) specifies if optimization run on just segment times
             
-            const int N = 10;
+            const int N = 20;
             mav_trajectory_generation::PolynomialOptimizationNonLinear<N> opt(dimension, parameters, false);
             opt.setupFromVertices(vertices, segment_times, derivative_to_optimize);
             opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, v_max);
@@ -303,7 +291,7 @@ void waypointsCallback1( trajectory_msgs::MultiDOFJointTrajectory msg)
 
             visualization_msgs::MarkerArray markers;
             double distance = 4.0; // Distance by which to seperate additional markers. Set 0.0 to disable.
-            std::string frame_id = "map";
+            std::string frame_id = "world";
 
             // From Trajectory class:
             mav_trajectory_generation::drawMavTrajectory(trajectory, distance, frame_id, &markers);
@@ -341,8 +329,8 @@ void plan(void)
 	bounds.setHigh(0,40);//+5
 	bounds.setLow(1,-40);//-5
 	bounds.setHigh(1,40);//+5
-	bounds.setLow(2,-8);//-2
-	bounds.setHigh(2,2);//4
+	bounds.setLow(2,-15);//-2
+	bounds.setHigh(2,15);//4
 
 	space->as<ob::SE3StateSpace>()->setBounds(bounds);
 
@@ -354,17 +342,18 @@ void plan(void)
 
     // create a random start state
 	ob::ScopedState<ob::SE3StateSpace> start(space);
-	start->setXYZ(1,1,1);
+	//start->setXYZ(cur_x,cur_y,cur_z);
+	start->setXYZ(0, 0, 1);
 	start->as<ob::SO3StateSpace::StateType>(1)->setIdentity();
 	// start.random();
 
     // create a random goal state
 	ob::ScopedState<ob::SE3StateSpace> goal(space);
-	 goal->setXYZ(goal_x,goal_y,goal_z+0.5); //treshold for landing height 0.2
-     //goal->setXYZ(2,2,-3);
+	 goal->setXYZ(goal_x,goal_y,goal_z+0.2); //treshold for landing height 0.2
+     //goal->setXYZ(1,1,-10);
      //goal->setXYZ(-3.76742, 2.98793, -0.788997);
 	 goal->as<ob::SO3StateSpace::StateType>(1)->setIdentity();
-	//goal.random();
+     //goal.random();
 
     // create a problem instance
 	ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
@@ -393,11 +382,11 @@ std::cout << "goal valid: "<<isWaypointValid(goal) << std::endl;
 	pdef->print(std::cout);
 
     // attempt to solve the problem within one second of planning time
-	ob::PlannerStatus solved = planner->solve(3.0);
+	ob::PlannerStatus solved = planner->solve(4.0);
 
 
 	std::cout << "Reached 2: " << std::endl;
-	if (solved && isWaypointValid(start) && isWaypointValid(goal))//&& !pdef->hasApproximateSolution()
+	if (solved && isWaypointValid(start) && isWaypointValid(goal) && !pdef->hasApproximateSolution())
 	{
         // get the goal representation from the problem definition (not the same as the goal state)
         // and inquire about the found path
@@ -487,9 +476,9 @@ std::cout << "goal valid: "<<isWaypointValid(goal) << std::endl;
 			marker.pose.orientation.y = rot->y;
 			marker.pose.orientation.z = rot->z;
 			marker.pose.orientation.w = rot->w;
-			marker.scale.x = 0.1;
-			marker.scale.y = 0.1;
-			marker.scale.z = 0.1;
+			marker.scale.x = 0.3;
+			marker.scale.y = 0.3;
+			marker.scale.z = 0.3;
 			marker.color.a = 1.0;
 			marker.color.r = 0.0;
 			marker.color.g = 1.0;
@@ -510,29 +499,30 @@ std::cout << "goal valid: "<<isWaypointValid(goal) << std::endl;
   
 }
 
-
-
-
-void octomap_load_and_plan()
+void cust_callback(const octomap_msgs::Octomap::ConstPtr &msg,const geometry_msgs::PoseStamped::ConstPtr &pose)//(octomap_msgs::Octomap::ConstPtr msg)
 {
-
-
-    //loading octree from binary
-	octomap::OcTree temp_tree(0.1);
-    const std::string filename = "/home/valada/mapfile.bt";
-	temp_tree.readBinary(filename);
-	fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(&temp_tree));
 	
 
+  
+	ROS_INFO("IN HERE! ");
+
+	// convert octree to collision object
+	 octomap::OcTree* tree_oct = dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*msg));
+	 fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(tree_oct));
 	fcl::CollisionObject temp((std::shared_ptr<fcl::CollisionGeometry>(tree)));
 	treeObj = temp;
+	std::cout<<tree_oct;
+	ROS_INFO("octomap loaded111111!! ");
 	
-    std::cout<<"loaded!!!!!!!!!!!!!!";
-    
-    plan();
-    
-	flag_sub_goal=3;
-}
+	cur_x=pose->pose.position.x;
+	cur_y=pose->pose.position.y;
+	cur_z=pose->pose.position.z;
+      	flag_sub_goal=3;
+	ROS_INFO("current pose loaded11!! ");
+    	
+
+
+
 
 void getLandingPoint(const geometry_msgs::Pose &pose)
 { 
@@ -540,41 +530,46 @@ void getLandingPoint(const geometry_msgs::Pose &pose)
   goal_y = pose.position.y;
   goal_z = pose.position.z;
 
-   if(flag_sub_goal==3)
+  if(flag_sub_goal==3)
     plan();
 
 }
 
 
+
+
 int main(int argc, char **argv)
 {   
-    //init ROS......
+	//init ROS......
 	ros::init(argc, argv, "octomap_planner");
-    ros::NodeHandle n;
+	ros::NodeHandle n;
 
-    //Load Octomap......
-    octomap::OcTree temp_tree(0.1);
-    //const std::string filename = "/home/valada/lab_map.bt";
-    const std::string filename = "/home/valada/airsim_map_small.bt";
-	temp_tree.readBinary(filename);
-	fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(&temp_tree));
-	fcl::CollisionObject temp((std::shared_ptr<fcl::CollisionGeometry>(tree)));
-	treeObj = temp;
-    std::cout<<"octomap loaded!!";
-	flag_sub_goal=3;
 
-    //ROS Publishers.....
+	//ROS Publishers.....
 
-    vis_pub = n.advertise<visualization_msgs::MarkerArray>( "my_marker_array1" ,1,true);
-    spline_pub = n.advertise<visualization_msgs::Marker>( "visualization_marker_spline", 0 );
+	vis_pub = n.advertise<visualization_msgs::MarkerArray>( "my_marker_array1" ,1,true);
+	spline_pub = n.advertise<visualization_msgs::Marker>( "visualization_marker_spline", 200 ,true);
+	ros::Rate r(10);
+	//ROS SUbscribers..... 
 
-    //ROS SUbscribers..... 
-    ros::Subscriber landing_pose_sub = n.subscribe("/landing_sites_np/clicked_pose", 1, getLandingPoint);
-    
-	
+	using namespace message_filters;
+	message_filters::Subscriber<octomap_msgs::Octomap> oct_sub(n, "/octomap_binary", 1);
+	message_filters::Subscriber<geometry_msgs::PoseStamped> cur_pose_sub(n, "/firefly/ground_truth/pose", 1);
+	typedef sync_policies::ApproximateTime<octomap_msgs::Octomap, geometry_msgs::PoseStamped> RetrieveSimDataPolicy;
+
+	Synchronizer<RetrieveSimDataPolicy> sync(RetrieveSimDataPolicy(10000), oct_sub, cur_pose_sub);
+	sync.registerCallback(boost::bind(&cust_callback, _1, _2));
+
+
+
+	ros::Subscriber landing_pose_sub = n.subscribe("/landing_sites_np/clicked_pose", 1, getLandingPoint);
+
 	std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
+	while(ros::ok()){
 
-	ros::spin();
 
+		ros::spinOnce();
+		r.sleep();
+	}
 	return 0;
 }
