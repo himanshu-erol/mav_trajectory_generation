@@ -2,7 +2,6 @@
 
 # Changelog
 This is a fork of original mav_trajectory_generation repo with added path planning algorithm.
-Given initial and final points it calculates a jerk free trajectory.
 
 ## Installation Instructions
 
@@ -34,7 +33,7 @@ sudo apt-get install liboctomath-dev
 ```
 installs version 1.6, might create symlink errors while [catkin build] because default version required is 1.8 by Ros-kinetic.
 
-4. Install the mav_masgs dependency :
+4. get the mav_mags pacakage :
 
 ```
 cd ~/catkin_ws/src
@@ -48,12 +47,19 @@ git clone https://github.com/ethz-asl/mav_comm.git
 ## Added node old_path_planning
 
 **Subscribers**
-1. /landing_sites/poses (takes goal point) *optional. comment the subscriber to give manual waypoints as global variables*
+1. /ground_truth/pose (takes current pose to use as initial point) 
 2. /octomap_binary (takes binary octomap)
+3. /landing_sites_np/clicked_pose (takes destination pose to use as end point)
 
 **Publishers**
-1. /my_marker_array1 (output trajectory)
+1. /my_marker_array1 (jerk free trajectory)
+1. /visualization_marker_spline (spline trajectory)
 
+## Usage
+
+```
+roslaunch path_plan.launch
+```
 
 
 
