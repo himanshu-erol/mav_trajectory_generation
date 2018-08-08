@@ -42,6 +42,9 @@ target_link_libraries(test_feasibility ${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(run_test src/run_test.cpp)
 target_link_libraries(run_test ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+
+
+
 find_package(octomap REQUIRED)
 find_package(fcl REQUIRED)
 find_package(OMPL REQUIRED)
@@ -92,6 +95,8 @@ target_link_libraries(old_path_planning ${PROJECT_NAME}
    fcl
 )
 
+add_executable(cur_point_transformer src/cur_point_transformer.cpp)
+target_link_libraries(cur_point_transformer ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 
 
